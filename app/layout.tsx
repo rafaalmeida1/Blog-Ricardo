@@ -1,22 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Merriweather } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-})
-
-const merriweather = Merriweather({
-  subsets: ["latin"],
-  weight: ["300", "400", "700", "900"],
-  variable: "--font-merriweather",
-  display: "swap",
-})
 
 export const metadata: Metadata = {
   title: "Ricardo Lopes de Souza | Advogado Criminalista",
@@ -39,7 +25,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${merriweather.variable} antialiased`}>
+    <html lang="pt-BR" className="antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700;900&display=swap" 
+          rel="stylesheet" 
+        />
+      </head>
       <body className="font-sans">
         <Header />
         <main>{children}</main>
