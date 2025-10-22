@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  theses Thesis[]
+
+  @@map("users")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  theses Thesis[]
+
+  @@map("categories")
+}
+
+model Thesis {
+  id                   String    @id @default(cuid())
+  title                String
+  slug                 String    @unique
+  description          String    @db.Text
+  content              Json      @default("{}")
+  coverImage           String?
+  coverImagePosition   String    @default("center")
+  published            Boolean   @default(false)
+  publishedAt          DateTime?
+  views                Int       @default(0)
+  categoryId           String
+  authorId             String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  media    Media[]
+
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([published])
+  @@index([slug])
+  @@map("theses")
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  thesisId  String
+  type      String   // 'image', 'video', 'audio'
+  url       String
+  filename  String
+  mimeType  String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  thesis Thesis @relation(fields: [thesisId], references: [id], onDelete: Cascade)
+
+  @@index([thesisId])
+  @@map("media")
+}
