@@ -48,17 +48,9 @@ COPY --from=builder /app/scripts ./scripts
 # Create uploads directory
 RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
 
-# Create startup script
-RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "🚀 Starting application..."' >> /app/start.sh && \
-    echo 'echo "📊 Running database migrations..."' >> /app/start.sh && \
-    echo 'npx prisma migrate deploy' >> /app/start.sh && \
-    echo 'echo "🌱 Seeding database..."' >> /app/start.sh && \
-    echo 'npm run db:seed' >> /app/start.sh && \
-    echo 'echo "✅ Database ready!"' >> /app/start.sh && \
-    echo 'echo "🌐 Starting Next.js server..."' >> /app/start.sh && \
-    echo 'exec node server.js' >> /app/start.sh && \
-    chmod +x /app/start.sh
+# Copy and setup startup script
+COPY scripts/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 USER nextjs
 
