@@ -43,7 +43,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
-# Scripts are not needed for production
+# Copy scripts for seeding
+COPY --from=builder /app/scripts ./scripts
 
 # Create uploads directory
 RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
@@ -53,8 +54,6 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "🚀 Starting application..."' >> /app/start.sh && \
     echo 'echo "⏳ Waiting for database connection..."' >> /app/start.sh && \
     echo 'sleep 15' >> /app/start.sh && \
-    echo 'echo "📊 Setting up database..."' >> /app/start.sh && \
-    echo 'npx prisma generate' >> /app/start.sh && \
     echo 'echo "🔄 Creating database tables..."' >> /app/start.sh && \
     echo 'npx prisma db push --force-reset --accept-data-loss' >> /app/start.sh && \
     echo 'sleep 5' >> /app/start.sh && \
@@ -64,6 +63,9 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "🌐 Starting Next.js server..."' >> /app/start.sh && \
     echo 'exec node server.js' >> /app/start.sh && \
     chmod +x /app/start.sh
+
+# Fix permissions for node_modules
+RUN chown -R nextjs:nodejs /app/node_modules
 
 USER nextjs
 
