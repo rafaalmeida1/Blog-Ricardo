@@ -65,11 +65,10 @@ npm run dev
 - Atualizar para Node.js 18+
 - Ou usar apenas Docker (recomendado)
 
-## 📝 Scripts Disponíveis
+## 📝 Comandos Disponíveis
 
-- `start-local.bat` - Para Windows local
-- `scripts/start.sh` - Para Docker
-- `scripts/dev-start.sh` - Para desenvolvimento
+- `npm run dev` - Para desenvolvimento local
+- `docker-compose up -d` - Para produção com Docker
 
 ## 🌐 URLs
 
