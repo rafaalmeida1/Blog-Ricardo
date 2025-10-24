@@ -153,11 +153,11 @@ export function CoverImageUpload({
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-2 w-full sm:w-auto">
                 <Label htmlFor="position">Posição da Imagem</Label>
                 <Select value={coverImagePosition} onValueChange={onPositionChange}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -175,6 +175,7 @@ export function CoverImageUpload({
                 variant="destructive"
                 size="sm"
                 onClick={handleRemoveImage}
+                className="w-full sm:w-auto"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Remover

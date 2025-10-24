@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { LoadingBar } from "@/components/loading-bar"
+import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
   title: "Ricardo Lopes de Souza | Advogado Criminalista",
@@ -35,9 +37,11 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans">
+        <LoadingBar />
         <Header />
         <main>{children}</main>
         <Footer />
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   )

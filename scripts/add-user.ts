@@ -1,7 +1,14 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
 
-const prisma = new PrismaClient()
+// Use local database URL for scripts
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: "postgresql://postgres:postgres@localhost:5438/ricardo_advogado"
+    }
+  }
+})
 
 async function addUser() {
   const args = process.argv.slice(2)

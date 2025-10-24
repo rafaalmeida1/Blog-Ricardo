@@ -14,7 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Trash2, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { toast } from "sonner"
 import { deleteThesis } from "@/app/actions/thesis"
 
@@ -25,16 +25,29 @@ interface DeleteThesisButtonProps {
 
 export function DeleteThesisButton({ thesisId, thesisTitle }: DeleteThesisButtonProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
-      await deleteThesis(thesisId)
-      toast.success("Tese excluída com sucesso")
-      router.refresh()
-    } catch (error) {
-      toast.error("Erro ao excluir tese")
+      const result = await deleteThesis(thesisId)
+      if (result?.success) {
+        toast.success("Tese excluída com sucesso!")
+        
+        // Se estiver na página de edição, redireciona para o dashboard do admin
+        if (pathname.includes('/editar')) {
+          router.push('/admin')
+        } else {
+          // Se estiver no dashboard, apenas atualiza a página
+          router.refresh()
+        }
+      } else {
+        toast.error(`Erro ao excluir tese: ${result?.error || 'Erro desconhecido'}`)
+      }
+    } catch (error: any) {
+      console.error("Error deleting thesis:", error)
+      toast.error(`Erro ao excluir tese: ${error.message}`)
     } finally {
       setIsDeleting(false)
     }

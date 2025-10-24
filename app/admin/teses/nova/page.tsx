@@ -19,11 +19,11 @@ export default async function NewThesisPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AdminNav user={user} />
+      <AdminNav user={user || undefined} />
 
-      <main className="max-w-5xl mx-auto p-6">
+      <main className="max-w-5xl mx-auto p-4 sm:p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-serif font-bold">Nova Tese</h1>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold">Nova Tese</h1>
           <p className="text-muted-foreground mt-1">Crie uma nova tese ou artigo jurídico</p>
         </div>
 

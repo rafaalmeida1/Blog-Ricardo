@@ -46,19 +46,23 @@ COPY --from=builder /app/prisma ./prisma
 # Copy scripts for seeding
 COPY --from=builder /app/scripts ./scripts
 
-# Create uploads directory
-RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
+# Create uploads directory with proper permissions
+RUN mkdir -p /app/public/uploads && \
+    chown -R nextjs:nodejs /app/public/uploads && \
+    chmod -R 755 /app/public/uploads
 
 # Create startup script inline
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "🚀 Starting application..."' >> /app/start.sh && \
     echo 'echo "⏳ Waiting for database connection..."' >> /app/start.sh && \
     echo 'sleep 15' >> /app/start.sh && \
-    echo 'echo "🔄 Creating database tables..."' >> /app/start.sh && \
-    echo 'npx prisma db push --force-reset --accept-data-loss' >> /app/start.sh && \
+    echo 'echo "🔄 Checking database schema..."' >> /app/start.sh && \
+    echo 'npx prisma db push' >> /app/start.sh && \
     echo 'sleep 5' >> /app/start.sh && \
-    echo 'echo "🌱 Seeding database..."' >> /app/start.sh && \
+    echo 'echo "🌱 Seeding database (if needed)..."' >> /app/start.sh && \
     echo 'npm run db:seed' >> /app/start.sh && \
+    echo 'echo "🔍 Checking users..."' >> /app/start.sh && \
+    echo 'npm run check-users' >> /app/start.sh && \
     echo 'echo "✅ Database ready!"' >> /app/start.sh && \
     echo 'echo "🌐 Starting Next.js server..."' >> /app/start.sh && \
     echo 'exec node server.js' >> /app/start.sh && \

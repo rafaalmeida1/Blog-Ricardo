@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { incrementThesisViews } from "@/app/actions/thesis"
 import { ThesisContent } from "@/components/thesis-content"
+import { ClickableImage } from "@/components/clickable-image"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, User, Eye } from "lucide-react"
 
@@ -70,9 +71,10 @@ export function TeseClientPage({ thesis }: ThesisPageProps) {
         {thesis.coverImage && (
           <div className="mb-8">
             <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
-              <img
+              <ClickableImage
                 src={thesis.coverImage}
                 alt={thesis.title}
+                fill
                 className="w-full h-full object-cover"
                 style={{ objectPosition: thesis.coverImagePosition || 'center' }}
               />

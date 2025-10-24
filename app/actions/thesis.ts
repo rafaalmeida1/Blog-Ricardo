@@ -26,6 +26,19 @@ export async function createThesis(data: {
 }) {
   try {
     console.log("Creating thesis with data:", data)
+    
+    // Verify author exists
+    const author = await prisma.user.findUnique({
+      where: { id: data.authorId }
+    })
+    
+    if (!author) {
+      console.error("Author not found:", data.authorId)
+      return { success: false, error: "Author not found" }
+    }
+    
+    console.log("Author found:", { id: author.id, email: author.email })
+    
     const slug = generateSlug(data.title)
     
     const thesis = await prisma.thesis.create({

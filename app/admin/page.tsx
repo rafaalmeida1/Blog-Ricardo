@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth-simple"
 import { prisma } from "@/lib/prisma"
 import { AdminNav } from "@/components/admin/admin-nav"
+import { DeleteThesisButton } from "@/components/admin/delete-thesis-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -46,16 +47,16 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AdminNav user={user} />
+      <AdminNav user={user || undefined} />
       
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-serif font-bold">Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold">Dashboard</h1>
             <p className="text-muted-foreground mt-1">Gerencie suas teses e artigos jurídicos</p>
           </div>
-          <Link href="/admin/teses/nova">
-            <Button>
+          <Link href="/admin/teses/nova" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Nova Tese
             </Button>
@@ -119,37 +120,43 @@ export default async function AdminDashboardPage() {
                 {serializedTheses.map((thesis) => (
                   <div
                     key={thesis.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-slate-50 gap-4"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{thesis.title}</h3>
-                        <Badge variant={thesis.published ? "default" : "secondary"}>
-                          {thesis.published ? "Publicada" : "Rascunho"}
-                        </Badge>
-                        <Badge variant="outline">{thesis.category.name}</Badge>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-sm sm:text-base truncate">{thesis.title}</h3>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant={thesis.published ? "default" : "secondary"} className="text-xs">
+                            {thesis.published ? "Publicada" : "Rascunho"}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">{thesis.category.name}</Badge>
+                        </div>
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">
                         {thesis.description}
                       </p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-2">
                         <span>Criada em {new Date(thesis.createdAt).toLocaleDateString('pt-BR')}</span>
                         <span>{thesis.views} visualizações</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {thesis.published && (
                         <Link href={`/teses/${thesis.slug}`}>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
                       )}
                       <Link href={`/admin/teses/${thesis.id}/editar`}>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
+                      <DeleteThesisButton 
+                        thesisId={thesis.id} 
+                        thesisTitle={thesis.title} 
+                      />
                     </div>
                   </div>
                 ))}

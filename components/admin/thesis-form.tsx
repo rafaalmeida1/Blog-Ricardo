@@ -17,7 +17,6 @@ import { toast } from "sonner"
 import { createThesis, updateThesis } from "@/app/actions/thesis"
 import { CoverImageUpload } from "./cover-image-upload"
 import { SimpleEditor } from "./simple-editor"
-import Link from "next/link"
 
 const thesisSchema = z.object({
   title: z.string().min(5, "Título deve ter no mínimo 5 caracteres"),
@@ -48,20 +47,21 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [coverImage, setCoverImage] = useState("")
   const [coverImagePosition, setCoverImagePosition] = useState("center")
+  const [selectedCategoryId, setSelectedCategoryId] = useState("")
   const [content, setContent] = useState(() => {
     if (thesis?.content) {
       try {
-        if (typeof thesis.content === 'string') {
+        if (typeof thesis.content === "string") {
           return JSON.parse(thesis.content)
         }
-        if (typeof thesis.content === 'object' && thesis.content !== null) {
+        if (typeof thesis.content === "object" && thesis.content !== null) {
           return thesis.content
         }
       } catch (error) {
-        console.error('Error parsing thesis content:', error)
+        console.error("Error parsing thesis content:", error)
       }
     }
-    return { type: 'doc', content: [] }
+    return { type: "doc", content: [] }
   })
 
   const {
@@ -70,6 +70,7 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<ThesisFormData>({
     resolver: zodResolver(thesisSchema),
     defaultValues: {
@@ -82,40 +83,42 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
 
   const published = watch("published")
 
-  // Initialize form with thesis data if editing
   useEffect(() => {
     if (thesis) {
-      setValue("title", thesis.title)
-      setValue("description", thesis.description)
-      setValue("categoryId", thesis.categoryId)
-      setValue("published", thesis.published)
+
+      setSelectedCategoryId(thesis.categoryId)
+      reset({
+        title: thesis.title,
+        description: thesis.description,
+        categoryId: thesis.categoryId,
+        published: thesis.published,
+      })
+
+      setValue("categoryId", thesis.categoryId, { shouldValidate: false })
+
       setCoverImage(thesis.coverImage || "")
       setCoverImagePosition(thesis.coverImagePosition || "center")
-      
-      console.log('Loading thesis content:', thesis.content)
-      if (thesis.content) {
-        if (typeof thesis.content === 'string') {
+
+      if (thesis.content) { 
+        if (typeof thesis.content === "string") {
           try {
             const parsed = JSON.parse(thesis.content)
-            console.log('Parsed content:', parsed)
             setContent(parsed)
           } catch (error) {
-            console.error('Error parsing content:', error)
-            setContent({ type: 'doc', content: [] })
+            console.error("Error parsing content:", error)
+            setContent({ type: "doc", content: [] })
           }
-        } else if (typeof thesis.content === 'object' && thesis.content !== null) {
-          console.log('Object content:', thesis.content)
+        } else if (typeof thesis.content === "object" && thesis.content !== null) {
           setContent(thesis.content)
         } else {
-          console.log('Invalid content type, setting default')
-          setContent({ type: 'doc', content: [] })
+          setContent({ type: "doc", content: [] })
         }
       } else {
-        console.log('No content, setting default')
-        setContent({ type: 'doc', content: [] })
+        setContent({ type: "doc", content: [] })
       }
+
     }
-  }, [thesis, setValue])
+  }, [thesis, reset, setValue, watch, categories, selectedCategoryId, setSelectedCategoryId])
 
   const onSubmit = async (data: ThesisFormData) => {
     setIsSubmitting(true)
@@ -135,7 +138,7 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
           router.push("/admin")
           router.refresh()
         } else {
-          toast.error(`Erro: ${result?.error || 'Erro desconhecido'}`)
+          toast.error(`Erro: ${result?.error || "Erro desconhecido"}`)
         }
       } else {
         const result = await createThesis(thesisData)
@@ -144,7 +147,7 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
           router.push("/admin")
           router.refresh()
         } else {
-          toast.error(`Erro: ${result?.error || 'Erro desconhecido'}`)
+          toast.error(`Erro: ${result?.error || "Erro desconhecido"}`)
         }
       }
     } catch (error: any) {
@@ -165,34 +168,25 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Título *</Label>
-            <Input
-              id="title"
-              placeholder="Ex: Análise sobre Habeas Corpus..."
-              {...register("title")}
-            />
-            {errors.title && (
-              <p className="text-sm text-red-600">{errors.title.message}</p>
-            )}
+            <Input id="title" placeholder="Ex: Análise sobre Habeas Corpus..." {...register("title")} />
+            {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Descrição *</Label>
-            <Textarea
-              id="description"
-              placeholder="Breve resumo da tese..."
-              rows={3}
-              {...register("description")}
-            />
-            {errors.description && (
-              <p className="text-sm text-red-600">{errors.description.message}</p>
-            )}
+            <Textarea id="description" placeholder="Breve resumo da tese..." rows={3} {...register("description")} />
+            {errors.description && <p className="text-sm text-red-600">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="categoryId">Categoria *</Label>
-            <Select 
-              value={watch("categoryId")} 
-              onValueChange={(value) => setValue("categoryId", value)}
+            <Select
+              value={selectedCategoryId}
+              onValueChange={(value) => {
+                console.log("Category changed to:", value)
+                setSelectedCategoryId(value)
+                setValue("categoryId", value, { shouldValidate: true })
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
@@ -205,17 +199,10 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
                 ))}
               </SelectContent>
             </Select>
-            {errors.categoryId && (
-              <p className="text-sm text-red-600">{errors.categoryId.message}</p>
-            )}
           </div>
 
           <div className="flex items-center space-x-2">
-            <Switch
-              id="published"
-              checked={published}
-              onCheckedChange={(checked) => setValue("published", checked)}
-            />
+            <Switch id="published" checked={published} onCheckedChange={(checked) => setValue("published", checked)} />
             <Label htmlFor="published">Publicar tese imediatamente</Label>
           </div>
         </CardContent>
@@ -246,17 +233,13 @@ export function ThesisForm({ categories, authorId, thesis }: ThesisFormProps) {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={() => router.back()}>
+      <div className="flex flex-col sm:flex-row justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           {thesis ? "Atualizar Tese" : "Criar Tese"}
         </Button>
       </div>

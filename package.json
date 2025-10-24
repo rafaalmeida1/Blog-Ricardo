@@ -12,7 +12,8 @@
     "db:seed": "tsx scripts/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "db:deploy": "prisma migrate deploy",
-    "add-user": "tsx scripts/add-user.ts"
+    "add-user": "tsx scripts/add-user.ts",
+    "check-users": "tsx scripts/check-users.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "latest",
@@ -77,6 +78,7 @@
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "^0.4.6",
+    "nprogress": "^0.2.0",
     "nodemailer": "latest",
     "path": "latest",
     "prisma": "latest",
