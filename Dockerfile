@@ -49,7 +49,21 @@ COPY --from=builder /app/scripts ./scripts
 # Create uploads directory with proper permissions
 RUN mkdir -p /app/public/uploads && \
     chown -R nextjs:nodejs /app/public/uploads && \
-    chmod -R 755 /app/public/uploads
+    chmod -R 777 /app/public/uploads
+
+# Create entrypoint script that runs as root to fix permissions, then switches to nextjs
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'set -e' >> /app/entrypoint.sh && \
+    echo 'echo "🔧 Ajustando permissões do diretório de uploads..."' >> /app/entrypoint.sh && \
+    echo 'mkdir -p /app/public/uploads' >> /app/entrypoint.sh && \
+    echo 'chown -R nextjs:nodejs /app/public/uploads' >> /app/entrypoint.sh && \
+    echo 'chmod -R 777 /app/public/uploads' >> /app/entrypoint.sh && \
+    echo 'echo "✅ Permissões ajustadas!"' >> /app/entrypoint.sh && \
+    echo 'exec su-exec nextjs "$@"' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
+# Install su-exec for user switching
+RUN apk add --no-cache su-exec
 
 # Create startup script inline
 RUN echo '#!/bin/sh' > /app/start.sh && \
@@ -71,7 +85,9 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
 # Fix permissions for node_modules
 RUN chown -R nextjs:nodejs /app/node_modules
 
-USER nextjs
+# Use entrypoint to fix permissions before switching user
+# Note: entrypoint runs as root, then switches to nextjs user
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 EXPOSE 3333
 
