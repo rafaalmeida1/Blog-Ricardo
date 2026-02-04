@@ -1,11 +1,13 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
 
-// Use local database URL for scripts
+// Use DATABASE_URL from environment if available (Docker), otherwise use localhost
+const databaseUrl = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5438/ricardo_advogado"
+
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: "postgresql://postgres:postgres@localhost:5438/ricardo_advogado"
+      url: databaseUrl
     }
   }
 })
