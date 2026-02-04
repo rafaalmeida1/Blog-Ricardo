@@ -5,6 +5,8 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { LoadingBar } from "@/components/loading-bar"
 import { Toaster } from "sonner"
+// Import error handler early
+import "@/lib/error-handler"
 
 export const metadata: Metadata = {
   title: "Ricardo Lopes de Souza | Advogado Criminalista",

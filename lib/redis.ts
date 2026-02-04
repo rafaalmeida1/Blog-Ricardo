@@ -8,11 +8,16 @@ export const redis =
   globalForRedis.redis ??
   new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
     maxRetriesPerRequest: 3,
-    retryStrategy(times) {
-      const delay = Math.min(times * 50, 2000)
-      return delay
-    },
     lazyConnect: true,
+    enableOfflineQueue: false,
+    connectTimeout: 5000,
+    commandTimeout: 5000,
+    retryStrategy: (times) => {
+      if (times > 3) {
+        return null // Stop retrying after 3 attempts
+      }
+      return Math.min(times * 50, 2000)
+    },
   })
 
 if (process.env.NODE_ENV !== "production") globalForRedis.redis = redis
@@ -27,27 +32,44 @@ export const cacheKeys = {
 
 export async function getCached<T>(key: string, fetcher: () => Promise<T>, ttl = 3600): Promise<T> {
   try {
+    // Check if Redis is connected
+    if (redis.status !== 'ready' && redis.status !== 'connect') {
+      return fetcher()
+    }
+    
     const cached = await redis.get(key)
     if (cached) {
       return JSON.parse(cached)
     }
 
     const data = await fetcher()
-    await redis.setex(key, ttl, JSON.stringify(data))
+    
+    // Only cache if Redis is ready
+    if (redis.status === 'ready') {
+      await redis.setex(key, ttl, JSON.stringify(data))
+    }
+    
     return data
   } catch (error) {
     console.error("[Redis] Cache error:", error)
+    // Always fallback to fetcher on error
     return fetcher()
   }
 }
 
 export async function invalidateCache(pattern: string): Promise<void> {
   try {
+    // Check if Redis is connected
+    if (redis.status !== 'ready') {
+      return
+    }
+    
     const keys = await redis.keys(pattern)
     if (keys.length > 0) {
       await redis.del(...keys)
     }
   } catch (error) {
     console.error("[Redis] Invalidation error:", error)
+    // Silently fail - cache invalidation is not critical
   }
 }
