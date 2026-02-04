@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-key'
+const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-key-change-me'
 
 export interface User {
   id: string
@@ -40,69 +40,16 @@ export async function login(email: string, password: string): Promise<User | nul
 }
 
 export async function createSession(user: User): Promise<string> {
-  // Verificar se JWT_SECRET está configurado
-  if (!JWT_SECRET || JWT_SECRET === 'fallback-secret-key') {
-    console.error('[AUTH] ⚠️ JWT_SECRET não configurado ou usando fallback!')
-    console.error('[AUTH] Configure NEXTAUTH_SECRET no ambiente!')
-  }
-  
-  const payload = { 
-    id: user.id, 
-    email: user.email, 
-    name: user.name, 
-    role: user.role 
-  }
-  
-  console.log('[AUTH] Creating token with payload:', {
-    id: payload.id,
-    email: payload.email,
-    jwtSecretLength: JWT_SECRET?.length || 0,
-    jwtSecretPreview: JWT_SECRET?.substring(0, 10) + '...'
-  })
-  
   const token = jwt.sign(
-    payload,
+    { 
+      id: user.id, 
+      email: user.email, 
+      name: user.name, 
+      role: user.role 
+    },
     JWT_SECRET,
     { expiresIn: '7d' }
   )
-
-  console.log('[AUTH] Token created:', {
-    tokenLength: token.length,
-    tokenPreview: token.substring(0, 30) + '...',
-    expiresIn: '7d'
-  })
-
-  const cookieStore = await cookies()
-  
-  // Determinar se está em produção (HTTPS)
-  const isProduction = process.env.NODE_ENV === 'production'
-  const nextAuthUrl = process.env.NEXTAUTH_URL || ''
-  const isSecure = isProduction || nextAuthUrl.startsWith('https://')
-  
-  // Configuração do cookie
-  const cookieOptions: any = {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax' as const,
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-    path: '/',
-  }
-  
-  // Se houver domínio configurado, usar (útil para subdomínios)
-  if (process.env.COOKIE_DOMAIN) {
-    cookieOptions.domain = process.env.COOKIE_DOMAIN
-  }
-  
-  cookieStore.set('auth-token', token, cookieOptions)
-
-  console.log('[AUTH] ✅ Session created and cookie set:', {
-    userId: user.id,
-    email: user.email,
-    secure: isSecure,
-    production: isProduction,
-    cookiePath: cookieOptions.path,
-    cookieDomain: cookieOptions.domain || 'default'
-  })
 
   return token
 }
@@ -124,7 +71,6 @@ export async function getCurrentUser(): Promise<User | null> {
       role: decoded.role
     }
   } catch (error) {
-    console.error('Get user error:', error)
     return null
   }
 }
