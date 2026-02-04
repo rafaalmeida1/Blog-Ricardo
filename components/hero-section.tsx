@@ -59,20 +59,6 @@ export function HeroSection() {
           </Button>
         </div>
 
-        <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-          <div className="text-center">
-            <div className="text-3xl font-bold mb-1">15+</div>
-            <div className="text-sm text-slate-400">Anos de Experiência</div>
-          </div>
-          <div className="text-center border-x border-white/10">
-            <div className="text-3xl font-bold mb-1">500+</div>
-            <div className="text-sm text-slate-400">Casos Atendidos</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold mb-1">95%</div>
-            <div className="text-sm text-slate-400">Taxa de Sucesso</div>
-          </div>
-        </div>
       </div>
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">

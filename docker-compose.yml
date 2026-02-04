@@ -43,15 +43,17 @@ services:
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=http://localhost:3333
       - NEXTAUTH_SECRET=your-secret-key-change-in-production
+      - UPLOADS_DIR=/app/public/uploads
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - ./public/uploads:/app/public/uploads
+      - uploads_data:/app/public/uploads
     restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
+  uploads_data:
