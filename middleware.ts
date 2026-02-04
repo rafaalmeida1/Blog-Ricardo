@@ -196,6 +196,8 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     const token = request.cookies.get('auth-token')?.value
     
+    console.log(`[MIDDLEWARE] Checking admin route: ${pathname}, has token: ${!!token}`)
+    
     if (!token) {
       console.info(`[AUTH] Tentativa de acesso sem token: ${pathname} de IP: ${ip}`)
       const loginUrl = new URL('/admin/login', request.url)
@@ -206,8 +208,15 @@ export function middleware(request: NextRequest) {
     // Validar token JWT
     const tokenValidation = validateToken(token)
     
+    console.log(`[MIDDLEWARE] Token validation result:`, {
+      valid: tokenValidation.valid,
+      error: tokenValidation.error,
+      hasPayload: !!tokenValidation.payload
+    })
+    
     if (!tokenValidation.valid) {
       console.warn(`[AUTH] Token inválido: ${tokenValidation.error} - IP: ${ip} - Path: ${pathname}`)
+      console.warn(`[AUTH] JWT_SECRET configurado: ${JWT_SECRET ? 'SIM' : 'NÃO'} (${JWT_SECRET?.substring(0, 10)}...)`)
       
       // Rate limiting para tentativas de auth falhadas
       const authRateLimit = checkRateLimit(ip, true)
@@ -237,7 +246,7 @@ export function middleware(request: NextRequest) {
       response.headers.set('X-User-Email', tokenValidation.payload?.email || 'unknown')
     }
     
-    console.info(`[AUTH] Acesso autorizado: ${pathname} - User: ${tokenValidation.payload?.email} - IP: ${ip}`)
+    console.info(`[AUTH] ✅ Acesso autorizado: ${pathname} - User: ${tokenValidation.payload?.email} - IP: ${ip}`)
   }
   
   // Proteger rotas de API admin

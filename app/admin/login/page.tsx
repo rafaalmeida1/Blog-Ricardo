@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-import { Suspense } from "react"
+import { Suspense, useEffect } from "react"
 import { useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,12 +13,21 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 
 function LoginForm() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   const callbackUrl = searchParams.get("callbackUrl") || "/admin"
+  const sessionError = searchParams.get("error")
+
+  // Mostrar erro de sessão expirada se houver
+  useEffect(() => {
+    if (sessionError === 'session_expired') {
+      setError("Sua sessão expirou. Por favor, faça login novamente.")
+    }
+  }, [sessionError])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,6 +43,7 @@ function LoginForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include', // Importante: incluir cookies
       })
 
       const data = await response.json()
@@ -41,14 +51,27 @@ function LoginForm() {
 
       if (!response.ok) {
         setError(data.error || "Erro ao fazer login")
-      } else {
+        setIsLoading(false)
+        return
+      }
+
+      // Verificar se o login foi bem-sucedido
+      if (data.success) {
         console.log("Login successful, redirecting to:", callbackUrl)
-        window.location.href = callbackUrl
+        
+        // Aguardar um pouco para garantir que o cookie seja definido
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Usar router.push ao invés de window.location para melhor integração com Next.js
+        router.push(callbackUrl)
+        router.refresh() // Forçar refresh para garantir que o middleware veja o cookie
+      } else {
+        setError("Erro ao fazer login. Tente novamente.")
+        setIsLoading(false)
       }
     } catch (error) {
       console.error("Login exception:", error)
       setError("Erro ao fazer login. Tente novamente.")
-    } finally {
       setIsLoading(false)
     }
   }

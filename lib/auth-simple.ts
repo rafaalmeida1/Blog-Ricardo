@@ -52,12 +52,34 @@ export async function createSession(user: User): Promise<string> {
   )
 
   const cookieStore = await cookies()
-  cookieStore.set('auth-token', token, {
+  
+  // Determinar se está em produção (HTTPS)
+  const isProduction = process.env.NODE_ENV === 'production'
+  const nextAuthUrl = process.env.NEXTAUTH_URL || ''
+  const isSecure = isProduction || nextAuthUrl.startsWith('https://')
+  
+  // Configuração do cookie
+  const cookieOptions: any = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isSecure,
+    sameSite: 'lax' as const,
     maxAge: 7 * 24 * 60 * 60, // 7 days
-    path: '/'
+    path: '/',
+  }
+  
+  // Se houver domínio configurado, usar (útil para subdomínios)
+  if (process.env.COOKIE_DOMAIN) {
+    cookieOptions.domain = process.env.COOKIE_DOMAIN
+  }
+  
+  cookieStore.set('auth-token', token, cookieOptions)
+
+  console.log('[AUTH] Session created:', {
+    userId: user.id,
+    email: user.email,
+    secure: isSecure,
+    production: isProduction,
+    nextAuthUrl: nextAuthUrl.substring(0, 50) // Log parcial por segurança
   })
 
   return token
