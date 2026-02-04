@@ -79,27 +79,60 @@ function getClientIP(request: NextRequest): string {
 
 function validateToken(token: string): { valid: boolean; payload?: any; error?: string } {
   try {
+    if (!token || token.length < 10) {
+      return { valid: false, error: 'Token vazio ou muito curto' }
+    }
+    
+    if (!JWT_SECRET || JWT_SECRET === 'fallback-secret-key') {
+      console.error('[MIDDLEWARE] ⚠️ JWT_SECRET não configurado ou usando fallback!')
+    }
+    
     const decoded = jwt.verify(token, JWT_SECRET) as any
+    
+    console.log('[MIDDLEWARE] Token decoded successfully:', {
+      hasId: !!decoded.id,
+      hasEmail: !!decoded.email,
+      email: decoded.email,
+      exp: decoded.exp,
+      now: Math.floor(Date.now() / 1000),
+      expired: decoded.exp ? decoded.exp < Date.now() / 1000 : false
+    })
     
     // Validações adicionais
     if (!decoded.id || !decoded.email) {
+      console.error('[MIDDLEWARE] Token payload incompleto:', { id: decoded.id, email: decoded.email })
       return { valid: false, error: 'Token inválido: payload incompleto' }
     }
     
     // Verificar se o token não expirou (jwt.verify já faz isso, mas garantimos)
     if (decoded.exp && decoded.exp < Date.now() / 1000) {
+      console.error('[MIDDLEWARE] Token expirado:', {
+        exp: decoded.exp,
+        now: Math.floor(Date.now() / 1000),
+        diff: Math.floor(Date.now() / 1000) - decoded.exp
+      })
       return { valid: false, error: 'Token expirado' }
     }
     
     return { valid: true, payload: decoded }
   } catch (error: any) {
+    console.error('[MIDDLEWARE] Token validation error:', {
+      name: error.name,
+      message: error.message,
+      tokenLength: token?.length,
+      jwtSecretLength: JWT_SECRET?.length
+    })
+    
     if (error.name === 'TokenExpiredError') {
       return { valid: false, error: 'Token expirado' }
     }
     if (error.name === 'JsonWebTokenError') {
-      return { valid: false, error: 'Token inválido' }
+      return { valid: false, error: `Token inválido: ${error.message}` }
     }
-    return { valid: false, error: 'Erro ao validar token' }
+    if (error.name === 'NotBeforeError') {
+      return { valid: false, error: 'Token ainda não válido' }
+    }
+    return { valid: false, error: `Erro ao validar token: ${error.message || 'erro desconhecido'}` }
   }
 }
 

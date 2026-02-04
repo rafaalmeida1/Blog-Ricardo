@@ -26,10 +26,12 @@ export async function POST(request: NextRequest) {
 
     console.log('[LOGIN API] User authenticated:', user.email)
 
-    // Criar sessão e obter token
+    // Criar sessão - isso já define o cookie via cookies()
     const token = await createSession(user)
+    
+    console.log('[LOGIN API] Token created:', token.substring(0, 20) + '...')
 
-    // Criar resposta com cookie
+    // Criar resposta JSON
     const response = NextResponse.json({
       success: true,
       user: {
@@ -40,7 +42,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Garantir que o cookie seja definido na resposta (mesma lógica do createSession)
+    // O cookie já foi definido pelo createSession via cookies()
+    // Mas vamos garantir que esteja na resposta também
     const isProduction = process.env.NODE_ENV === 'production'
     const nextAuthUrl = process.env.NEXTAUTH_URL || ''
     const isSecure = isProduction || nextAuthUrl.startsWith('https://')
@@ -57,9 +60,10 @@ export async function POST(request: NextRequest) {
       cookieOptions.domain = process.env.COOKIE_DOMAIN
     }
     
+    // Definir o cookie na resposta também
     response.cookies.set('auth-token', token, cookieOptions)
 
-    console.log('[LOGIN API] Session cookie set, secure:', isSecure)
+    console.log('[LOGIN API] Response cookie set, secure:', isSecure, 'token length:', token.length)
 
     return response
   } catch (error) {

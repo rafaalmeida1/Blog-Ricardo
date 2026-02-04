@@ -40,16 +40,37 @@ export async function login(email: string, password: string): Promise<User | nul
 }
 
 export async function createSession(user: User): Promise<string> {
+  // Verificar se JWT_SECRET está configurado
+  if (!JWT_SECRET || JWT_SECRET === 'fallback-secret-key') {
+    console.error('[AUTH] ⚠️ JWT_SECRET não configurado ou usando fallback!')
+    console.error('[AUTH] Configure NEXTAUTH_SECRET no ambiente!')
+  }
+  
+  const payload = { 
+    id: user.id, 
+    email: user.email, 
+    name: user.name, 
+    role: user.role 
+  }
+  
+  console.log('[AUTH] Creating token with payload:', {
+    id: payload.id,
+    email: payload.email,
+    jwtSecretLength: JWT_SECRET?.length || 0,
+    jwtSecretPreview: JWT_SECRET?.substring(0, 10) + '...'
+  })
+  
   const token = jwt.sign(
-    { 
-      id: user.id, 
-      email: user.email, 
-      name: user.name, 
-      role: user.role 
-    },
+    payload,
     JWT_SECRET,
     { expiresIn: '7d' }
   )
+
+  console.log('[AUTH] Token created:', {
+    tokenLength: token.length,
+    tokenPreview: token.substring(0, 30) + '...',
+    expiresIn: '7d'
+  })
 
   const cookieStore = await cookies()
   
@@ -74,12 +95,13 @@ export async function createSession(user: User): Promise<string> {
   
   cookieStore.set('auth-token', token, cookieOptions)
 
-  console.log('[AUTH] Session created:', {
+  console.log('[AUTH] ✅ Session created and cookie set:', {
     userId: user.id,
     email: user.email,
     secure: isSecure,
     production: isProduction,
-    nextAuthUrl: nextAuthUrl.substring(0, 50) // Log parcial por segurança
+    cookiePath: cookieOptions.path,
+    cookieDomain: cookieOptions.domain || 'default'
   })
 
   return token

@@ -57,14 +57,15 @@ function LoginForm() {
 
       // Verificar se o login foi bem-sucedido
       if (data.success) {
-        console.log("Login successful, redirecting to:", callbackUrl)
+        console.log("✅ Login successful, redirecting to:", callbackUrl)
+        console.log("User data:", data.user)
         
-        // Aguardar um pouco para garantir que o cookie seja definido
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // Aguardar um pouco mais para garantir que o cookie seja definido e processado
+        await new Promise(resolve => setTimeout(resolve, 300))
         
-        // Usar router.push ao invés de window.location para melhor integração com Next.js
-        router.push(callbackUrl)
-        router.refresh() // Forçar refresh para garantir que o middleware veja o cookie
+        // Forçar um reload completo da página para garantir que o cookie seja enviado
+        // Isso é necessário porque o middleware roda no servidor e precisa ver o cookie
+        window.location.href = callbackUrl
       } else {
         setError("Erro ao fazer login. Tente novamente.")
         setIsLoading(false)
