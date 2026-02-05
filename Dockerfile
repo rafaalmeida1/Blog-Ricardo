@@ -6,7 +6,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies
+# Copy package files first
 COPY package.json package-lock.json* ./
+# Copy prisma schema so postinstall can run prisma generate
+COPY prisma ./prisma
 RUN npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
