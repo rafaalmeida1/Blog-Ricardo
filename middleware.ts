@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
+import { jwtVerify } from 'jose'
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-key-change-me'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Proteger apenas rotas admin (exceto login)
@@ -15,7 +15,8 @@ export function middleware(request: NextRequest) {
     }
 
     try {
-      jwt.verify(token, JWT_SECRET)
+      const secret = new TextEncoder().encode(JWT_SECRET)
+      await jwtVerify(token, secret)
       // Token válido, permitir acesso
       return NextResponse.next()
     } catch (error) {
