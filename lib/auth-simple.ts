@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { SignJWT, jwtVerify } from 'jose'
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-key-change-me'
 
@@ -40,16 +40,22 @@ export async function login(email: string, password: string): Promise<User | nul
 }
 
 export async function createSession(user: User): Promise<string> {
-  const token = jwt.sign(
-    { 
-      id: user.id, 
-      email: user.email, 
-      name: user.name, 
-      role: user.role 
-    },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  )
+  const secret = new TextEncoder().encode(JWT_SECRET)
+  
+  // Criar token com expiração de 7 dias
+  const now = Math.floor(Date.now() / 1000)
+  const expirationTime = now + (7 * 24 * 60 * 60) // 7 dias em segundos
+  
+  const token = await new SignJWT({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt(now)
+    .setExpirationTime(expirationTime)
+    .sign(secret)
 
   return token
 }
@@ -63,12 +69,14 @@ export async function getCurrentUser(): Promise<User | null> {
       return null
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as any
+    const secret = new TextEncoder().encode(JWT_SECRET)
+    const { payload } = await jwtVerify(token, secret)
+    
     return {
-      id: decoded.id,
-      email: decoded.email,
-      name: decoded.name,
-      role: decoded.role
+      id: payload.id as string,
+      email: payload.email as string,
+      name: payload.name as string,
+      role: payload.role as string
     }
   } catch (error) {
     return null

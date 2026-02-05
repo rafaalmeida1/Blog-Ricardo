@@ -16,11 +16,17 @@ export async function middleware(request: NextRequest) {
 
     try {
       const secret = new TextEncoder().encode(JWT_SECRET)
-      await jwtVerify(token, secret)
+      const { payload } = await jwtVerify(token, secret)
+      
+      // Verificar se o payload tem os campos necessários
+      if (!payload.id || !payload.email) {
+        throw new Error('Token inválido: payload incompleto')
+      }
+      
       // Token válido, permitir acesso
       return NextResponse.next()
     } catch (error) {
-      // Token inválido, redirecionar para login
+      // Token inválido ou expirado, redirecionar para login
       const response = NextResponse.redirect(new URL('/admin/login', request.url))
       response.cookies.delete('auth-token')
       return response

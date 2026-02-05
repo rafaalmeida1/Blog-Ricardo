@@ -10,14 +10,15 @@ export const redis =
     maxRetriesPerRequest: 3,
     lazyConnect: true,
     enableOfflineQueue: false,
-    connectTimeout: 5000,
-    commandTimeout: 5000,
+    connectTimeout: 2000,
+    commandTimeout: 2000,
     retryStrategy: (times) => {
-      if (times > 3) {
-        return null // Stop retrying after 3 attempts
+      if (times > 2) {
+        return null // Stop retrying after 2 attempts
       }
-      return Math.min(times * 50, 2000)
+      return null // Don't retry automatically
     },
+    showFriendlyErrorStack: false,
   })
 
 if (process.env.NODE_ENV !== "production") globalForRedis.redis = redis
